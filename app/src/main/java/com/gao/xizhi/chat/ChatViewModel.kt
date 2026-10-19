@@ -76,7 +76,7 @@ class ChatViewModel(
     fun retry() {
         if (_state.value.isStreaming) return
         _state.value = _state.value.copy(error = null)
-        viewModelScope.launch { runStream() }
+        streamJob = viewModelScope.launch { runStream() }
     }
 
     private suspend fun runStream() {
@@ -87,7 +87,10 @@ class ChatViewModel(
             return
         }
 
-        val module = moduleDao.getById(moduleId) ?: return
+        val module = moduleDao.getById(moduleId) ?: run {
+            _state.value = _state.value.copy(isStreaming = false, error = "模块不存在")
+            return
+        }
         val notes = db.learningNoteDao().byModule(moduleId)
         val terms = db.knowledgeCardDao().observeByModule(moduleId).first().filter { it.type == KnowledgeCard.Type.TERM }
         val requestMessages = ContextBuilder.buildMessages(
@@ -110,7 +113,10 @@ class ChatViewModel(
                 }
             persistReply(builder.toString())
         } catch (e: kotlinx.coroutines.CancellationException) {
-            persistReply(builder.toString())
+            kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                persistReply(builder.toString())
+            }
+            throw e
         } catch (e: Exception) {
             _state.value = _state.value.copy(
                 isStreaming = false,

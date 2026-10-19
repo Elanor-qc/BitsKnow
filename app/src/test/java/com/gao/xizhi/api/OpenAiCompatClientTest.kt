@@ -129,7 +129,23 @@ class OpenAiCompatClientTest {
         )
         assertEquals(
             "https://api.deepseek.com/v1/chat/completions",
+            OpenAiCompatClient.buildUrl("https://api.deepseek.com/v1"),
+        )
+        assertEquals(
+            "https://api.deepseek.com/v1/chat/completions",
             OpenAiCompatClient.buildUrl("https://api.deepseek.com/v1/chat/completions"),
         )
+    }
+
+    @Test
+    fun `complete with malformed 200 body does not hang and returns failure`() = runTest {
+        server.enqueue(MockResponse().setBody("""{"choices": []}"""))
+        val result = client.complete(
+            messages = listOf(ChatMessage.user("hi")),
+            baseUrl = server.url("/v1").toString(),
+            apiKey = "k",
+            model = "m",
+        )
+        assertTrue(result.isFailure)
     }
 }

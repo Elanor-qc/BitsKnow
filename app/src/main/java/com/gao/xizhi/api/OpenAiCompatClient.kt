@@ -92,21 +92,27 @@ class OpenAiCompatClient(
             }
 
             override fun onResponse(call: Call, response: Response) {
-                response.use {
-                    if (!it.isSuccessful) {
-                        cont.resume(Result.failure(IOException("HTTP ${it.code}: ${it.body?.string()?.take(300)}")))
-                        return
+                try {
+                    response.use {
+                        if (!it.isSuccessful) {
+                            cont.resume(Result.failure(IOException("HTTP ${it.code}: ${it.body?.string()?.take(300)}")))
+                            return
+                        }
+                        val body = it.body?.string().orEmpty()
+                        val content: String = runCatching {
+                            json.parseToJsonElement(body)
+                                .jsonObject["choices"]!!
+                                .jsonArray[0]
+                                .jsonObject["message"]!!
+                                .jsonObject["content"]!!
+                                .jsonPrimitive.content
+                        }.getOrElse { e -> IOException("unexpected response: ${body.take(300)}", e).let { throw it } }
+                        cont.resume(Result.success(content))
                     }
-                    val body = it.body?.string().orEmpty()
-                    val content: String = runCatching {
-                        json.parseToJsonElement(body)
-                            .jsonObject["choices"]!!
-                            .jsonArray[0]
-                            .jsonObject["message"]!!
-                            .jsonObject["content"]!!
-                            .jsonPrimitive.content
-                    }.getOrElse { e -> throw IOException("unexpected response: ${body.take(300)}", e) }
-                    cont.resume(Result.success(content))
+                } catch (e: IOException) {
+                    cont.resume(Result.failure(e))
+                } catch (e: Exception) {
+                    cont.resume(Result.failure(e))
                 }
             }
         })
@@ -120,7 +126,11 @@ class OpenAiCompatClient(
 
         internal fun buildUrl(baseUrl: String): String {
             val base = baseUrl.trim().trimEnd('/')
-            return if (base.endsWith("/chat/completions")) base else "$base/v1/chat/completions"
+            return when {
+                base.endsWith("/chat/completions") -> base
+                base.endsWith("/v1") -> "$base/chat/completions"
+                else -> "$base/v1/chat/completions"
+            }
         }
 
         internal fun buildPayload(messages: List<ChatMessage>, model: String, stream: Boolean, maxTokens: Int? = null): String {

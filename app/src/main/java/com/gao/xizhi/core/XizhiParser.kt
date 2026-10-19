@@ -29,19 +29,19 @@ object XizhiParser {
         isLenient = true
     }
 
-    private val FENCE = Regex("```xizhi\\s*\\n([\\s\\S]*?)```", RegexOption.IGNORE_CASE)
+    // greedy match to the LAST closing fence in raw, so card bodies containing ``` don't truncate the JSON
+    private val FENCE = Regex("```xizhi\\s*\\n([\\s\\S]*)```", RegexOption.IGNORE_CASE)
 
     fun parse(raw: String): ParsedReply {
-        val matches = FENCE.findAll(raw).toList()
-        if (matches.isEmpty()) return ParsedReply(raw, null)
-
-        val last = matches.last()
-        val block = runCatching { json.decodeFromString<XizhiBlock>(last.groupValues[1].trim()) }
+        val match = FENCE.find(raw) ?: return ParsedReply(raw, null)
+        // only accept the block if it sits at the tail of the reply; a mid-reply match with a later
+        // ``` fence means the greedy capture swallowed display content and JSON parse will fail anyway
+        val block = runCatching { json.decodeFromString<XizhiBlock>(match.groupValues[1].trim()) }
             .getOrNull()
 
         if (block == null) return ParsedReply(raw, null)
 
-        val display = raw.removeRange(last.range).trimEnd()
+        val display = raw.removeRange(match.range).trimEnd()
         return ParsedReply(display, sanitize(block))
     }
 

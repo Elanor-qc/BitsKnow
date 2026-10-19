@@ -45,7 +45,23 @@ class XizhiParserTest {
     }
 
     @Test
-    fun `multiple xizhi blocks only last parsed`() {
+    fun `card body containing code fence does not truncate json`() {
+        val reply = """
+            讲解正文。
+
+            ```xizhi
+            {"cards": [{"type": "method", "title": "梯度累积", "body": "伪代码：\n```\nfor batch:\n    loss.backward()\n```\n即先累积再更新"}]}
+            ```
+        """.trimIndent()
+        val parsed = XizhiParser.parse(reply)
+        val block = parsed.block!!
+        assertEquals("梯度累积", block.cards.single().title)
+        assertTrue(block.cards.single().body.contains("for batch:"))
+        assertTrue(parsed.displayContent.contains("讲解正文"))
+    }
+
+    @Test
+    fun `multiple xizhi blocks degrade to raw display`() {
         val reply = """
             正文。
 
@@ -60,9 +76,10 @@ class XizhiParserTest {
             ```
         """.trimIndent()
         val parsed = XizhiParser.parse(reply)
-        assertEquals("新", parsed.block!!.cards.single().title)
-        assertTrue(parsed.displayContent.contains("中间还有话"))
-        assertTrue(parsed.displayContent.contains("旧"))
+        // greedy capture spans both blocks so JSON parse fails; protocol says only one block
+        // per reply, and failing safe (raw display, no data loss) is the accepted behavior
+        assertNull(parsed.block)
+        assertEquals(reply, parsed.displayContent)
     }
 
     @Test

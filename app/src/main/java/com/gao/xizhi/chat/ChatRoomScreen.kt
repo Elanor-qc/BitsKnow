@@ -58,9 +58,16 @@ fun ChatRoomScreen(
     var input by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
-    LaunchedEffect(state.messages.size, state.streamingText) {
-        val total = state.messages.size + if (state.streamingText.isNotEmpty()) 1 else 0
+    LaunchedEffect(state.messages.size) {
+        val total = state.messages.size
         if (total > 0) listState.animateScrollToItem(total - 1)
+    }
+    LaunchedEffect(state.streamingText) {
+        if (state.streamingText.isEmpty()) return@LaunchedEffect
+        val last = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
+        val totalItems = listState.layoutInfo.totalItemsCount
+        val nearBottom = last >= totalItems - 2
+        if (nearBottom && totalItems > 0) listState.scrollToItem(totalItems - 1)
     }
 
     Scaffold(
@@ -143,21 +150,23 @@ fun ChatRoomScreen(
                         CircularProgressIndicator(Modifier.padding(16.dp))
                     }
                 }
-            }
-        }
-
-        state.error?.let { error ->
-            Row(
-                modifier = Modifier.padding(padding).padding(16.dp).fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    error,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.weight(1f),
-                )
-                TextButton(onClick = { vm.retry() }) { Text("重试") }
+                val errorText = state.error
+                if (errorText != null) {
+                    item(key = "error") {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                errorText,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.weight(1f),
+                            )
+                            TextButton(onClick = { vm.retry() }) { Text("重试") }
+                        }
+                    }
+                }
             }
         }
     }

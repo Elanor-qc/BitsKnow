@@ -3,6 +3,7 @@ package com.gao.xizhi.chat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.room.withTransaction
 import com.gao.xizhi.data.AppDatabase
 import com.gao.xizhi.data.Module
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,10 +26,12 @@ class ModuleListViewModel(private val db: AppDatabase) : ViewModel() {
 
     fun delete(moduleId: Long) {
         viewModelScope.launch {
-            db.messageDao().deleteByModule(moduleId)
-            db.knowledgeCardDao().deleteByModule(moduleId)
-            db.learningNoteDao().deleteByModule(moduleId)
-            db.moduleDao().deleteById(moduleId)
+            db.withTransaction {
+                db.messageDao().deleteByModule(moduleId)
+                db.knowledgeCardDao().deleteByModule(moduleId)
+                db.learningNoteDao().deleteByModule(moduleId)
+                db.moduleDao().deleteById(moduleId)
+            }
         }
     }
 
