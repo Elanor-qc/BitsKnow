@@ -12,6 +12,9 @@ interface ModuleDao {
     @Query("SELECT * FROM modules ORDER BY updatedAt DESC")
     fun observeAll(): Flow<List<Module>>
 
+    @Query("SELECT * FROM modules ORDER BY updatedAt DESC")
+    suspend fun getAll(): List<Module>
+
     @Query("SELECT * FROM modules WHERE id = :id")
     suspend fun getById(id: Long): Module?
 
@@ -41,6 +44,9 @@ interface MessageDao {
 interface KnowledgeCardDao {
     @Query("SELECT * FROM knowledge_cards WHERE moduleId = :moduleId ORDER BY id DESC")
     fun observeByModule(moduleId: Long): Flow<List<KnowledgeCard>>
+
+    @Query("SELECT * FROM knowledge_cards WHERE moduleId = :moduleId ORDER BY id ASC")
+    suspend fun byModule(moduleId: Long): List<KnowledgeCard>
 
     @Query("SELECT * FROM knowledge_cards ORDER BY id DESC")
     fun observeAll(): Flow<List<KnowledgeCard>>

@@ -45,6 +45,9 @@ fun SettingsScreen(db: AppDatabase) {
     val configs by vm.configs.collectAsState()
     val testing by vm.testing.collectAsState()
     val testResult by vm.testResult.collectAsState()
+    val exporting by vm.exporting.collectAsState()
+    val exportResult by vm.exportResult.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
     var editing by remember { mutableStateOf<ApiConfig?>(null) }
     var showCreate by remember { mutableStateOf(false) }
     var showRenderTest by remember { mutableStateOf(false) }
@@ -65,6 +68,17 @@ fun SettingsScreen(db: AppDatabase) {
             )
 
             TextButton(onClick = { showRenderTest = true }) { Text("渲染测试") }
+            TextButton(
+                onClick = { vm.export(context) },
+                enabled = !exporting,
+            ) { Text(if (exporting) "导出中…" else "导出学习数据") }
+            exportResult?.let { result ->
+                Text(
+                    result,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
 
             if (configs.isEmpty()) {
                 Text("还没有配置，点右下角 + 添加。", style = MaterialTheme.typography.bodyMedium)

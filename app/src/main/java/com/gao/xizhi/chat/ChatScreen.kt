@@ -32,6 +32,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,7 +51,7 @@ fun ChatScreen(
 ) {
     val vm: ModuleListViewModel = viewModel(factory = ModuleListViewModel.Factory(db))
     val modules by vm.modules.collectAsState()
-    var showCreate by remember { mutableStateOf(false) }
+    var showCreate by rememberSaveable { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<Module?>(null) }
 
     Scaffold(

@@ -27,11 +27,30 @@ class SettingsViewModel(
     private val _testResult = MutableStateFlow<String?>(null)
     val testResult: StateFlow<String?> = _testResult
 
+    private val _exporting = MutableStateFlow(false)
+    val exporting: StateFlow<Boolean> = _exporting
+
+    private val _exportResult = MutableStateFlow<String?>(null)
+    val exportResult: StateFlow<String?> = _exportResult
+
+    fun export(context: android.content.Context) {
+        if (_exporting.value) return
+        viewModelScope.launch {
+            _exporting.value = true
+            _exportResult.value = null
+            _exportResult.value = try {
+                com.gao.xizhi.core.DataExporter.exportToDownloads(context.applicationContext, db)
+            } catch (e: Exception) {
+                "导出失败：${e.message ?: e.javaClass.simpleName}"
+            }
+            _exporting.value = false
+        }
+    }
+
     fun save(config: ApiConfig, isNew: Boolean) {
         viewModelScope.launch {
             if (isNew) {
                 val id = db.apiConfigDao().insert(config)
-                val others = db.apiConfigDao().observeAll()
                 db.apiConfigDao().activate(id)
             } else {
                 db.apiConfigDao().update(config)

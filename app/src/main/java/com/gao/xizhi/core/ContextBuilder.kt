@@ -74,6 +74,9 @@ object ContextBuilder {
         if (increment.isNullOrBlank()) return current
         val merged = if (current.isBlank()) increment.trim()
         else current.trim() + "\n" + increment.trim()
-        return if (merged.length > MAX_SUMMARY_LENGTH) merged.take(MAX_SUMMARY_LENGTH) else merged
+        if (merged.length <= MAX_SUMMARY_LENGTH) return merged
+        // keep head + tail so old progress isn't erased and the newest increment survives
+        val keep = (MAX_SUMMARY_LENGTH - 3) / 2
+        return merged.take(keep) + "\n…\n" + merged.takeLast(keep)
     }
 }

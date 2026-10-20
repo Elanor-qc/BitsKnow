@@ -65,10 +65,13 @@ class ContextBuilderTest {
     }
 
     @Test
-    fun `mergeSummary appends and truncates to 800`() {
+    fun `mergeSummary appends and truncates keeping head and tail`() {
         assertEquals("new", ContextBuilder.mergeSummary("", "new"))
         assertEquals("old\nnew", ContextBuilder.mergeSummary("old", "new"))
-        assertEquals(800, ContextBuilder.mergeSummary("a".repeat(790), "b".repeat(100)).length)
+        val merged = ContextBuilder.mergeSummary("a".repeat(790), "b".repeat(100))
+        assertTrue(merged.length <= 800)
+        assertTrue(merged.startsWith("a"))
+        assertTrue(merged.endsWith("b"))
         assertEquals("unchanged", ContextBuilder.mergeSummary("unchanged", null))
     }
 }

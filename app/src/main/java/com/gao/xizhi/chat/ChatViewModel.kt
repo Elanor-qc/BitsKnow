@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 data class ChatUiState(
+    val moduleTitle: String = "",
     val messages: List<Message> = emptyList(),
     val streamingText: String = "",
     val isStreaming: Boolean = false,
@@ -43,6 +44,8 @@ class ChatViewModel(
 
     init {
         viewModelScope.launch {
+            val title = moduleDao.getById(moduleId)?.title ?: ""
+            _state.value = _state.value.copy(moduleTitle = title)
             messageDao.latest(moduleId, limit = 200).let { msgs ->
                 _state.value = _state.value.copy(messages = msgs.reversed())
             }

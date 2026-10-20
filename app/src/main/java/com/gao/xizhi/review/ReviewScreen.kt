@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
@@ -64,14 +66,16 @@ fun ReviewScreen(db: AppDatabase) {
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(vertical = 8.dp),
         ) {
             FilterChip(
                 selected = ui.moduleId == null,
                 onClick = { vm.selectModule(null) },
                 label = { Text("全部") },
             )
-            modules.take(4).forEach { module ->
+            modules.forEach { module ->
                 FilterChip(
                     selected = ui.moduleId == module.id,
                     onClick = { vm.selectModule(module.id) },
