@@ -2,7 +2,7 @@ package com.gao.xizhi.markdown
 
 /**
  * Splits text into markdown and LaTeX segments.
- * $$...$$ are display math, $...$ is inline math (non-greedy, no newlines).
+ * Supported delimiters: $$...$$ and \[...\] (display), $...$ and \(...\) (inline).
  * $ inside fenced code blocks (``` / ~~~) or escaped as \$ is left alone.
  */
 sealed interface Segment {
@@ -12,7 +12,9 @@ sealed interface Segment {
 
 object MathSplitter {
 
-    private val PATTERN = Regex("""(?<!\\)\$\$([\s\S]+?)(?<!\\)\$\$|(?<!\\)\$([^$\n]+?)(?<!\\)\$""")
+    private val PATTERN = Regex(
+        """(?<!\\)\$\$([\s\S]+?)(?<!\\)\$\$|(?<!\\)\$([^$\n]+?)(?<!\\)\$|\\\(([\s\S]+?)\\\)|\\\[([\s\S]+?)\\\]"""
+    )
     private val FENCE = Regex("""^(```|~~~)""", RegexOption.MULTILINE)
 
     fun split(text: String): List<Segment> {
@@ -25,11 +27,12 @@ object MathSplitter {
             if (match.range.first > cursor) {
                 segments += Segment.Markdown(text.substring(cursor, match.range.first))
             }
-            val displayMath = match.groupValues[1]
-            val math = if (displayMath.isNotEmpty()) {
-                Segment.Math(displayMath.trim(), display = true)
-            } else {
-                Segment.Math(match.groupValues[2].trim(), display = false)
+            val groups = match.groupValues
+            val math = when {
+                groups[1].isNotEmpty() -> Segment.Math(groups[1].trim(), display = true)
+                groups[2].isNotEmpty() -> Segment.Math(groups[2].trim(), display = false)
+                groups[3].isNotEmpty() -> Segment.Math(groups[3].trim(), display = false)
+                else -> Segment.Math(groups[4].trim(), display = true)
             }
             if (math.latex.isEmpty()) {
                 segments += Segment.Markdown(match.value)

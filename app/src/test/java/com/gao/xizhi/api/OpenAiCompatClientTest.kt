@@ -6,6 +6,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -147,5 +148,13 @@ class OpenAiCompatClientTest {
             model = "m",
         )
         assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `extractDelta skips null content and missing content`() {
+        // reasoning models stream reasoning_content first with content:null
+        assertNull(OpenAiCompatClient.extractDelta("""{"choices":[{"delta":{"content":null}}]}"""))
+        assertNull(OpenAiCompatClient.extractDelta("""{"choices":[{"delta":{"reasoning_content":"思考中"}}]}"""))
+        assertEquals("你", OpenAiCompatClient.extractDelta("""{"choices":[{"delta":{"content":"你"}}]}"""))
     }
 }

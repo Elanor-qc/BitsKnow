@@ -159,12 +159,13 @@ class OpenAiCompatClient(
         }
 
         internal fun extractDelta(data: String): String? = runCatching {
-            val delta = json.parseToJsonElement(data)
+            val content = json.parseToJsonElement(data)
                 .jsonObject["choices"]!!
                 .jsonArray[0]
                 .jsonObject["delta"]!!
                 .jsonObject["content"]
-            delta?.jsonPrimitive?.content
+                ?: return@runCatching null // reasoning models send content:null while reasoning_content streams
+            if (content is kotlinx.serialization.json.JsonNull) null else content.jsonPrimitive.content
         }.getOrNull()
     }
 }

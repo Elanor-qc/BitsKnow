@@ -92,4 +92,22 @@ class MathSplitterTest {
         val result = MathSplitter.split("a \$ \$ b")
         assertTrue(result.none { it is Segment.Math })
     }
+
+    @Test
+    fun `backslash-paren inline math is detected`() {
+        val result = MathSplitter.split("函数 \\(f(x)=x^2\\) 完毕")
+        assertEquals(3, result.size)
+        val math = result[1] as Segment.Math
+        assertEquals("f(x)=x^2", math.latex)
+        assertEquals(false, math.display)
+    }
+
+    @Test
+    fun `backslash-bracket display math is detected`() {
+        val result = MathSplitter.split("损失\n\\[\\mathcal{L}=L_1\\]\n结束")
+        assertEquals(3, result.size)
+        val math = result[1] as Segment.Math
+        assertEquals("\\mathcal{L}=L_1", math.latex)
+        assertTrue(math.display)
+    }
 }
