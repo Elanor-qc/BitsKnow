@@ -16,6 +16,7 @@ mockwebserver = "4.12.0"
 core-ktx = "1.15.0"
 robolectric = "4.14.1"
 androidx-test-core = "1.6.1"
+markdown-renderer = "0.26.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -43,6 +44,8 @@ room-testing = { group = "androidx.room", name = "room-testing", version.ref = "
 mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "mockwebserver" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidx-test-core" }
+markdown-renderer = { group = "com.mikepenz", name = "multiplatform-markdown-renderer-m3", version.ref = "markdown-renderer" }
+markdown-renderer-coil = { group = "com.mikepenz", name = "multiplatform-markdown-renderer-coil3", version.ref = "markdown-renderer" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

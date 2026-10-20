@@ -196,12 +196,16 @@ private fun MessageBubble(message: Message) {
                 )
                 .padding(12.dp),
         ) {
-            Text(
-                message.content,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            if (isUser) {
+                Text(
+                    message.content,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                com.gao.xizhi.markdown.MarkdownText(text = message.content)
+            }
         }
     }
 }

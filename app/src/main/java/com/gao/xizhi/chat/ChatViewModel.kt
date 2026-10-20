@@ -99,13 +99,18 @@ class ChatViewModel(
         )
 
         val builder = StringBuilder()
+        var lastEmit = 0L
         try {
             client.stream(requestMessages, config.baseUrl, config.apiKey, config.model)
                 .collect { event ->
                     when (event) {
                         is StreamEvent.Delta -> {
                             builder.append(event.text)
-                            _state.value = _state.value.copy(streamingText = builder.toString())
+                            val now = System.currentTimeMillis()
+                            if (now - lastEmit >= 80) {
+                                lastEmit = now
+                                _state.value = _state.value.copy(streamingText = builder.toString())
+                            }
                         }
                         is StreamEvent.Done -> {}
                         is StreamEvent.Error -> throw event.throwable

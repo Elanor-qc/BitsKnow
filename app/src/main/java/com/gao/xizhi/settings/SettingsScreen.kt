@@ -47,6 +47,7 @@ fun SettingsScreen(db: AppDatabase) {
     val testResult by vm.testResult.collectAsState()
     var editing by remember { mutableStateOf<ApiConfig?>(null) }
     var showCreate by remember { mutableStateOf(false) }
+    var showRenderTest by remember { mutableStateOf(false) }
 
     Scaffold(
         floatingActionButton = {
@@ -62,6 +63,8 @@ fun SettingsScreen(db: AppDatabase) {
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = 4.dp, bottom = 16.dp),
             )
+
+            TextButton(onClick = { showRenderTest = true }) { Text("渲染测试") }
 
             if (configs.isEmpty()) {
                 Text("还没有配置，点右下角 + 添加。", style = MaterialTheme.typography.bodyMedium)
@@ -117,6 +120,10 @@ fun SettingsScreen(db: AppDatabase) {
                 )
             }
         }
+    }
+
+    if (showRenderTest) {
+        com.gao.xizhi.markdown.RenderTestDialog(onDismiss = { showRenderTest = false })
     }
 
     if (showCreate) {
