@@ -1,6 +1,7 @@
 package com.gao.xizhi.markdown
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -109,5 +110,23 @@ class MathSplitterTest {
         val math = result[1] as Segment.Math
         assertEquals("\\mathcal{L}=L_1", math.latex)
         assertTrue(math.display)
+    }
+
+    @Test
+    fun `math fenced code block becomes display math`() {
+        val input = "公式：\n```math\nR = \\begin{bmatrix} 1 & 0 \\end{bmatrix}\n```\n结束"
+        val result = MathSplitter.split(input)
+        val math = result.filterIsInstance<Segment.Math>().single()
+        assertTrue(math.display)
+        assertEquals("R = \\begin{bmatrix} 1 & 0 \\end{bmatrix}", math.latex)
+        assertFalse(result.any { (it as? Segment.Markdown)?.text?.contains("```") == true })
+    }
+
+    @Test
+    fun `latex fenced code block becomes display math`() {
+        val input = "```latex\nE = mc^2\n```"
+        val result = MathSplitter.split(input)
+        val math = result.filterIsInstance<Segment.Math>().single()
+        assertEquals("E = mc^2", math.latex)
     }
 }

@@ -15,17 +15,20 @@ object MathSplitter {
     private val PATTERN = Regex(
         """(?<!\\)\$\$([\s\S]+?)(?<!\\)\$\$|(?<!\\)\$([^$\n]+?)(?<!\\)\$|\\\(([\s\S]+?)\\\)|\\\[([\s\S]+?)\\\]"""
     )
+    // models often wrap display math in a ```math / ```latex fence instead of $$...$$
+    private val MATH_FENCE = Regex("""```(?:math|latex)\s*\n([\s\S]*?)```""")
     private val FENCE = Regex("""^(```|~~~)""", RegexOption.MULTILINE)
 
     fun split(text: String): List<Segment> {
         if (text.isBlank()) return emptyList()
-        val fenceSpans = findFenceSpans(text)
+        val normalized = MATH_FENCE.replace(text) { "\\[" + it.groupValues[1] + "\\]" }
+        val fenceSpans = findFenceSpans(normalized)
         val segments = mutableListOf<Segment>()
         var cursor = 0
-        for (match in PATTERN.findAll(text)) {
+        for (match in PATTERN.findAll(normalized)) {
             if (match.range.first inSpans fenceSpans) continue
             if (match.range.first > cursor) {
-                segments += Segment.Markdown(text.substring(cursor, match.range.first))
+                segments += Segment.Markdown(normalized.substring(cursor, match.range.first))
             }
             val groups = match.groupValues
             val math = when {
@@ -41,8 +44,8 @@ object MathSplitter {
             }
             cursor = match.range.last + 1
         }
-        if (cursor < text.length) {
-            segments += Segment.Markdown(text.substring(cursor))
+        if (cursor < normalized.length) {
+            segments += Segment.Markdown(normalized.substring(cursor))
         }
         return segments
     }

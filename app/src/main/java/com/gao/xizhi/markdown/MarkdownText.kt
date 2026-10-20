@@ -24,7 +24,18 @@ fun MarkdownText(
     Column(modifier = modifier) {
         segments.forEach { segment ->
             when (segment) {
-                is Segment.Markdown -> Markdown(segment.text)
+                is Segment.Markdown -> Markdown(
+                    segment.text,
+                    // phone-appropriate heading sizes: h1 no larger than a section title
+                    typography = com.mikepenz.markdown.m3.markdownTypography(
+                        h1 = MaterialTheme.typography.titleLarge,
+                        h2 = MaterialTheme.typography.titleMedium,
+                        h3 = MaterialTheme.typography.titleSmall,
+                        h4 = MaterialTheme.typography.titleSmall,
+                        h5 = MaterialTheme.typography.titleSmall,
+                        h6 = MaterialTheme.typography.titleSmall,
+                    ),
+                )
                 is Segment.Math -> KaTeXView(segment)
             }
         }
@@ -38,6 +49,7 @@ private fun KaTeXView(math: Segment.Math) {
     val html = remember(math.latex, math.display, textColor) {
         buildString {
             append("<!DOCTYPE html><html><head><meta charset=\"utf-8\">")
+            // baseUrl is file:///android_asset/, so asset paths are katex/...
             append("<link rel=\"stylesheet\" href=\"katex/katex.min.css\">")
             append("<style>body{margin:0;padding:2px 0;font-size:15px;color:$textColor;overflow-x:auto;}</style>")
             append("</head><body><span id=\"m\"></span>")
@@ -57,13 +69,13 @@ private fun KaTeXView(math: Segment.Math) {
                 isVerticalScrollBarEnabled = false
                 isHorizontalScrollBarEnabled = false
                 tag = html
-                loadDataWithBaseURL("file:///android_asset/katex/", html, "text/html", "utf-8", null)
+                loadDataWithBaseURL("file:///android_asset/", html, "text/html", "utf-8", null)
             }
         },
         update = { webView ->
             if (webView.tag != html) {
                 webView.tag = html
-                webView.loadDataWithBaseURL("file:///android_asset/katex/", html, "text/html", "utf-8", null)
+                webView.loadDataWithBaseURL("file:///android_asset/", html, "text/html", "utf-8", null)
             }
         },
         onRelease = { webView ->

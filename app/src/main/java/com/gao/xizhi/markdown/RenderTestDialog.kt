@@ -37,6 +37,14 @@ private val SAMPLE = """
 
 ${'$'}${'$'}\mathcal{L} = (1-\lambda)\mathcal{L}_{1} + \lambda \mathcal{L}_{\text{D-SSIM}}${'$'}${'$'}
 
+反斜杠定界符：旋转矩阵 \(R^\top R = I\)。
+
+math 代码块：
+
+```math
+R = \begin{bmatrix} \mathbf{r}_1 & \mathbf{r}_2 & \mathbf{r}_3 \end{bmatrix}
+```
+
 ## 代码
 
 ```python
