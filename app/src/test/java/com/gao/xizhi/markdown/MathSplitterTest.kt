@@ -55,4 +55,41 @@ class MathSplitterTest {
     fun `empty text returns empty`() {
         assertTrue(MathSplitter.split("").isEmpty())
     }
+
+    @Test
+    fun `dollars inside fenced code block are not split`() {
+        val input = "代码如下：\n" + "```" + "\necho \$HOME and \$PATH\n" + "```" + "\n结尾"
+        val result = MathSplitter.split(input)
+        assertTrue(result.all { it is Segment.Markdown })
+        assertEquals(1, result.size)
+    }
+
+    @Test
+    fun `math outside fence still splits when a fence exists elsewhere`() {
+        val input = "\$E=mc^2\$\n```\ncode \$x\$\n```\n"
+        val result = MathSplitter.split(input)
+        assertTrue(result.any { it is Segment.Math })
+        assertEquals(1, result.count { it is Segment.Math })
+    }
+
+    @Test
+    fun `unclosed fence protects the remainder`() {
+        val input = "text\n" + "```" + "\npartial \$a\$"
+        val result = MathSplitter.split(input)
+        assertTrue(result.all { it is Segment.Markdown })
+    }
+
+    @Test
+    fun `escaped dollar is not a math delimiter`() {
+        val input = "价格 \\$5 到 \\$10 之间"
+        val result = MathSplitter.split(input)
+        assertEquals(1, result.size)
+        assertTrue(result[0] is Segment.Markdown)
+    }
+
+    @Test
+    fun `whitespace-only math is skipped`() {
+        val result = MathSplitter.split("a \$ \$ b")
+        assertTrue(result.none { it is Segment.Math })
+    }
 }

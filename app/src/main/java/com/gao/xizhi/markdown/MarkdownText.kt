@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.viewinterop.AndroidView
@@ -18,7 +19,7 @@ fun MarkdownText(
     text: String,
     modifier: Modifier = Modifier,
 ) {
-    val segments = MathSplitter.split(text)
+    val segments = remember(text) { MathSplitter.split(text) }
     if (segments.isEmpty()) return
     Column(modifier = modifier) {
         segments.forEach { segment ->
@@ -34,16 +35,18 @@ fun MarkdownText(
 @Composable
 private fun KaTeXView(math: Segment.Math) {
     val textColor = String.format("#%06X", 0xFFFFFF and MaterialTheme.colorScheme.onSurfaceVariant.toArgb())
-    val html = buildString {
-        append("<!DOCTYPE html><html><head><meta charset=\"utf-8\">")
-        append("<link rel=\"stylesheet\" href=\"katex/katex.min.css\">")
-        append("<style>body{margin:0;padding:2px 0;font-size:15px;color:$textColor;overflow-x:auto;}</style>")
-        append("</head><body><span id=\"m\"></span>")
-        append("<script src=\"katex/katex.min.js\"></script>")
-        append("<script>var el=document.getElementById('m');")
-        append("try{katex.render(${jsEscape(math.latex)},el,{displayMode:${math.display},throwOnError:false});}")
-        append("catch(e){el.textContent=${jsEscape(math.latex)};}")
-        append("</script></body></html>")
+    val html = remember(math.latex, math.display, textColor) {
+        buildString {
+            append("<!DOCTYPE html><html><head><meta charset=\"utf-8\">")
+            append("<link rel=\"stylesheet\" href=\"katex/katex.min.css\">")
+            append("<style>body{margin:0;padding:2px 0;font-size:15px;color:$textColor;overflow-x:auto;}</style>")
+            append("</head><body><span id=\"m\"></span>")
+            append("<script src=\"katex/katex.min.js\"></script>")
+            append("<script>var el=document.getElementById('m');")
+            append("try{katex.render(${jsEscape(math.latex)},el,{displayMode:${math.display},throwOnError:true});}")
+            append("catch(e){el.textContent=${jsEscape(math.latex)};}")
+            append("</script></body></html>")
+        }
     }
 
     AndroidView(
@@ -53,10 +56,19 @@ private fun KaTeXView(math: Segment.Math) {
                 setBackgroundColor(android.graphics.Color.TRANSPARENT)
                 isVerticalScrollBarEnabled = false
                 isHorizontalScrollBarEnabled = false
+                tag = html
+                loadDataWithBaseURL("file:///android_asset/katex/", html, "text/html", "utf-8", null)
             }
         },
         update = { webView ->
-            webView.loadDataWithBaseURL("file:///android_asset/katex/", html, "text/html", "utf-8", null)
+            if (webView.tag != html) {
+                webView.tag = html
+                webView.loadDataWithBaseURL("file:///android_asset/katex/", html, "text/html", "utf-8", null)
+            }
+        },
+        onRelease = { webView ->
+            webView.stopLoading()
+            webView.destroy()
         },
         modifier = if (math.display) Modifier.fillMaxWidth() else Modifier.wrapContentWidth(),
     )

@@ -45,6 +45,12 @@ object XizhiParser {
         return ParsedReply(display, sanitize(block))
     }
 
+    /** Streaming display text: everything from the opening ```xizhi fence onward is protocol, not for the user. */
+    fun visibleStreaming(raw: String): String {
+        val idx = raw.indexOf("```xizhi", ignoreCase = true)
+        return if (idx >= 0) raw.substring(0, idx).trimEnd() else raw
+    }
+
     private fun sanitize(block: XizhiBlock): XizhiBlock = XizhiBlock(
         summary = block.summary?.trim()?.takeIf { it.isNotEmpty() },
         cards = block.cards.filter { it.title.isNotBlank() && it.body.isNotBlank() },

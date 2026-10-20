@@ -109,7 +109,7 @@ class ChatViewModel(
                             val now = System.currentTimeMillis()
                             if (now - lastEmit >= 80) {
                                 lastEmit = now
-                                _state.value = _state.value.copy(streamingText = builder.toString())
+                                _state.value = _state.value.copy(streamingText = XizhiParser.visibleStreaming(builder.toString()))
                             }
                         }
                         is StreamEvent.Done -> {}

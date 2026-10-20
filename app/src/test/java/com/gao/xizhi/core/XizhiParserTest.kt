@@ -107,4 +107,10 @@ class XizhiParserTest {
             XizhiParser.cardType("unknown-type"),
         )
     }
+
+    @Test
+    fun `visibleStreaming hides partial xizhi block`() {
+        assertEquals("正文", XizhiParser.visibleStreaming("正文\n\n```xizhi\n{\"summ"))
+        assertEquals("全文", XizhiParser.visibleStreaming("全文"))
+    }
 }
