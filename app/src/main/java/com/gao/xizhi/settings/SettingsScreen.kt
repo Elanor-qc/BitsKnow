@@ -69,7 +69,7 @@ fun SettingsScreen(db: AppDatabase) {
 
             TextButton(onClick = { showRenderTest = true }) { Text("渲染测试") }
             TextButton(
-                onClick = { vm.export(context) },
+                onClick = { vm.export(context.applicationContext) },
                 enabled = !exporting,
             ) { Text(if (exporting) "导出中…" else "导出学习数据") }
             exportResult?.let { result ->

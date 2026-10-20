@@ -86,7 +86,9 @@ fun ReviewScreen(db: AppDatabase) {
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(bottom = 8.dp),
+            modifier = Modifier.fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(bottom = 8.dp),
         ) {
             FilterChip(
                 selected = ui.typeFilter == null,

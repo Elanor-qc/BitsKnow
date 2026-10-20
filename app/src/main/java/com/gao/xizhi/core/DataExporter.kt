@@ -9,6 +9,7 @@ import com.gao.xizhi.data.AppDatabase
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.withContext
 
 object DataExporter {
 
@@ -48,25 +49,31 @@ object DataExporter {
     }
 
     /** Returns the display name of the written file, or an error message. */
-    suspend fun exportToDownloads(context: Context, db: AppDatabase): String {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            return "当前系统版本过低（需要 Android 10+），暂不支持导出"
+    suspend fun exportToDownloads(context: Context, db: AppDatabase): String =
+        withContext(kotlinx.coroutines.Dispatchers.IO) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                return@withContext "当前系统版本过低（需要 Android 10+），暂不支持导出"
+            }
+            val markdown = buildMarkdown(db)
+            val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.CHINA).format(Date())
+            val name = "xizhi-export-$stamp.md"
+            val resolver = context.contentResolver
+            val values = ContentValues().apply {
+                put(MediaStore.Downloads.DISPLAY_NAME, name)
+                put(MediaStore.Downloads.MIME_TYPE, "text/markdown")
+                put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+            }
+            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                ?: return@withContext "导出失败：无法创建文件"
+            try {
+                resolver.openOutputStream(uri)?.use { it.write(markdown.toByteArray(Charsets.UTF_8)) }
+                    ?: throw java.io.IOException("openOutputStream returned null")
+            } catch (e: Exception) {
+                resolver.delete(uri, null, null)
+                return@withContext "导出失败：${e.message ?: e.javaClass.simpleName}"
+            }
+            "已导出到 Download/$name"
         }
-        val markdown = buildMarkdown(db)
-        val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.CHINA).format(Date())
-        val name = "xizhi-export-$stamp.md"
-        val resolver = context.contentResolver
-        val values = ContentValues().apply {
-            put(MediaStore.Downloads.DISPLAY_NAME, name)
-            put(MediaStore.Downloads.MIME_TYPE, "text/markdown")
-            put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
-        }
-        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
-            ?: return "导出失败：无法创建文件"
-        resolver.openOutputStream(uri)?.use { it.write(markdown.toByteArray(Charsets.UTF_8)) }
-            ?: return "导出失败：无法写入文件"
-        return "已导出到 Download/$name"
-    }
 }
 
 private val com.gao.xizhi.data.KnowledgeCard.Type.label: String

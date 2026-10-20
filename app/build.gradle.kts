@@ -20,13 +20,6 @@ android {
         versionName = "0.1.0"
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
-        }
-    }
-
     signingConfigs {
         // credentials live in .env/keystore.properties (gitignored); fall back to debug signing
         val keystoreProps = rootProject.file(".env/keystore.properties")
@@ -38,6 +31,14 @@ android {
                 keyAlias = props.getProperty("keyAlias")
                 keyPassword = props.getProperty("keyPassword")
             }
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("release")
+                ?: signingConfigs.getByName("debug").also { logger.warn("release keystore missing; using debug key") }
         }
     }
     compileOptions {
@@ -76,7 +77,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.markdown.renderer)
-    implementation(libs.markdown.renderer.coil)
 
     testImplementation(libs.junit)
     testImplementation(libs.room.testing)
