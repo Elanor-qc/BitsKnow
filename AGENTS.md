@@ -92,12 +92,14 @@ MathSplitter 按 `$$...$$` `$...$` `\(...\)` `\[...\]` 分割（```math/```latex
 
 ## 当前状态（2026-10-20）
 
-- SPEC-00~07 全部完成，各经一轮以上多 agent 审查修复。当前 HEAD: `43a4de7`。
-- 最新交付：`隙知-v0.1.2-release.apk`（项目根），修复真机 v0.1.0 试用的三个问题：
+- SPEC-00~07 全部完成，各经一轮以上多 agent 审查修复。
+- 远端：`origin` = https://github.com/Elanor-qc/BitsKnow.git（main 分支），Release 页放 APK；
+  push 走 GCM 存储凭据，GitHub API（建 Release/传附件）用 `git credential fill` 取同一 token，无需 gh CLI。
+- 已有自定义花朵 logo 启动图标（mipmap-mdpi~xxxhdpi，原图见对话附件）；versionName 0.1.2 / versionCode 2。
+- 最新交付：`隙知-v0.1.2-release.apk`（项目根，也可从 GitHub Release 下载），修复真机 v0.1.0 试用的三个问题：
   null-delta 输出、KaTeX 路径 bug（公式从未渲染过）、一级标题过大（提示词已禁止 `#`，标题字号已压缩）。
 - 升级路径：v0.1.1 可覆盖安装 v0.1.2；v0.1.0 因签名修复需先卸载。
 - 待办/已知问题：
-  - `app/build.gradle.kts` 的 `versionName` 还是 "0.1.0"，与交付 APK 版本号不一致，下个版本记得改（versionCode 也该 +1）
   - 等用户真机测 v0.1.2：公式渲染是否正常、开头 null 是否消失
   - 明确不做（留口子）：联网搜索、SRS、通知；导出备份已做（MediaStore → Download）
   - API key 明文存 Room：记录在案的取舍，用户自用单机接受，不要"顺手修"
